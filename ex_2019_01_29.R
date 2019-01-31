@@ -68,3 +68,46 @@ flights %>%
   select(origin, dest, air_time)  %>%
   filter(air_time == min(air_time, na.rm = TRUE)) %>%
   distinct()
+
+###############################################################################################
+
+## Exercise 1
+
+## Which plane (check the tail number) flew out of each New York airport 
+## the most?
+
+
+flights %>%
+  filter(!is.na(tailnum)) %>%
+  group_by(origin, tailnum) %>%
+  summarize(n = n()) %>%
+  top_n(1, n)
+
+flights %>%
+  filter(!is.na(tailnum)) %>%
+  count(origin, tailnum) %>%
+  group_by(origin) %>%
+  top_n(1, n)
+
+flights %>% 
+  filter(tailnum == "N725MQ") %>%
+  select(origin, dest) %>%
+  distinct()
+
+## Exercise 2
+
+## Which date should you fly on if you want to have the lowest possible 
+## average departure delay? What about arrival delay?
+
+flights %>%
+  mutate(
+    date = paste(year,month,day, sep="/")
+  ) %>%
+  select(origin, date, dep_delay) %>%
+  group_by(origin, date) %>%
+  summarize(mean_delay = mean(dep_delay, na.rm=TRUE)) %>%
+  top_n(-1, mean_delay)
+
+
+
+
