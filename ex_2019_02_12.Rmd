@@ -1,0 +1,47 @@
+```{r setup, message = FALSE}
+library(dplyr)
+movies = readr::read_csv("http://bit.ly/sta323_movie_data")
+```
+
+
+## Exercise 1
+
+```{r, echo=FALSE}
+knitr::include_graphics("http://www2.stat.duke.edu/~cr173/Sta323_Sp19/slides/Lec09_files/figure-html/unnamed-chunk-36-1.png")
+```
+
+```{r}
+ggplot(
+  movies, 
+  aes(
+    x = imdb_num_votes / 1000,
+    y = imdb_rating,
+    color = audience_rating
+  )
+) + 
+  geom_point(alpha=0.5) +
+  facet_wrap(~mpaa_rating) +
+  labs(
+    x = "IMDB Number of Votes (thousands)",
+    y = "IMDB Ration",
+    color = "Audience Rating",
+    title = "IMDB Rating and Number of Votes, by MPAA rating"
+  )
+```
+
+## Exercise 2
+
+```{r echo=FALSE}
+knitr::include_graphics("http://www2.stat.duke.edu/~cr173/Sta323_Sp19/slides/Lec09_files/figure-html/unnamed-chunk-37-1.png")
+```
+
+```{r}
+ggplot(movies, aes(x=audience_score, y=critics_score, color=best_pic_nom)) +
+  geom_abline(intercept=0, slope=1, color="grey", alpha=0.5) +
+  geom_point() +
+  geom_smooth(method="lm", color="black", se=FALSE, fullrange=TRUE, alpha=0.5, size=0.5) +
+  facet_wrap(~mpaa_rating) +
+  theme_bw() +
+  xlim(0, 100) +
+  ylim(0, 100)
+```
