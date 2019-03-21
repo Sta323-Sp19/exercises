@@ -43,16 +43,13 @@ shinyApp(
         group_by(distribution) %>%
         mutate(
           density = density / sum(density / n())
-        ) %>%
-        ungroup() %>%
-        mutate(
-          distribution = forcats::as_factor(distribution)
         )
       
-      g = ggplot(d, aes(x=p, y=density, color=distribution)) +
+      g = ggplot(d, aes(x=p, y=density, color=forcats::as_factor(distribution))) +
         geom_line(size=2, alpha=0.5) + 
         scale_color_manual(values = c("#7fc97f", "#beaed4", "#dfc086")) +
-        theme_bw()
+        theme_bw() +
+        labs(color = "Distribution")
       
       g
     })
