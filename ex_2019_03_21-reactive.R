@@ -1,0 +1,60 @@
+library(shiny)
+library(dplyr)
+library(ggplot2)
+
+shinyApp(
+  ui = fluidPage(
+    title = "Beta-Binomial",
+    titlePanel("Beta-Binomial Visualizer"),
+    sidebarLayout(
+      sidebarPanel = sidebarPanel(
+        h4("Data:"),
+        sliderInput("x", "# of heads", min=0, max=100, value=10),
+        sliderInput("n", "# of flips", min=0, max=100, value=20),
+        h4("Prior:"),
+        numericInput("alpha", "Prior # of head", min=0, value=5),
+        numericInput("beta", "Prior # of tails", min=0, value=5)
+      ),
+      mainPanel = mainPanel(
+        plotOutput("plot")
+      )
+    )
+  ),
+  server = function(input, output, session) {
+    
+    observeEvent(
+      input$n,
+      {
+        updateSliderInput(session, "x", max = input$n)
+      }
+    )
+    
+    output$plot = renderPlot({
+      
+      d = tibble(
+        p = seq(0, 1, length.out = 1000)
+      ) %>%
+        mutate(
+          prior = dbeta(p, input$alpha, input$beta),
+          likelihood = dbinom(input$x, size = input$n, prob = p),
+          posterior = dbeta(p, input$alpha + input$x, input$beta + input$n - input$x)
+        ) %>%
+        tidyr::gather(distribution, density, -p) %>%
+        group_by(distribution) %>%
+        mutate(
+          density = density / sum(density / n())
+        ) %>%
+        ungroup() %>%
+        mutate(
+          distribution = forcats::as_factor(distribution)
+        )
+      
+      g = ggplot(d, aes(x=p, y=density, color=distribution)) +
+        geom_line(size=2, alpha=0.5) + 
+        scale_color_manual(values = c("#7fc97f", "#beaed4", "#dfc086")) +
+        theme_bw()
+      
+      g
+    })
+  }
+)
