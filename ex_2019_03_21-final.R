@@ -23,7 +23,11 @@ shinyApp(
         )
       ),
       mainPanel = mainPanel(
-        plotOutput("plot")
+        plotOutput("plot"),
+        div(
+          textOutput("n_post"),
+          style="text-align: center;"
+        )
       )
     )
   ),
@@ -35,6 +39,40 @@ shinyApp(
         updateSliderInput(session, "x", max = input$n)
       }
     )
+    
+    prior = reactive({
+      print("Generating prior draws ...")
+      rbeta(input$nsims, input$alpha, input$beta)
+    })
+      
+    gen_proc_sims = reactive({
+      print("Running generative process ...")
+      rbinom(input$nsims, size = input$n, prob = prior())
+    }) 
+    
+    posterior = reactive({
+      print("Selecting posterior samples ... ")
+      prior()[ gen_proc_sims() == input$x ]
+    })
+    
+    abc_df = reactive({
+      if (length(posterior()) < input$min_post)
+        stop("Not enough posterior samples, try increasing the number of simulations.")
+      
+      post_dens = density(posterior())
+      tibble(
+        distribution = "posterion (ABC)",
+        p = post_dens$x,
+        density = post_dens$y
+      )
+    })
+  
+    output$n_post = renderText({
+      if (input$abc) {
+        paste0("Ran ", input$nsims, " simultations and obtained ", 
+               length(posterior()), " posterior samples!")
+      }
+    })
     
     output$plot = renderPlot({
       
@@ -53,26 +91,9 @@ shinyApp(
         )
       
       if (input$abc) {
-      
-        prior = rbeta(input$nsims, input$alpha, input$beta)
-        
-        gen_proc_sims = rbinom(input$nsims, size = input$n, prob = prior)
-        
-        posterior = prior[ gen_proc_sims == input$x ]
-        
-        if (length(posterior) < input$min_post)
-            stop("Not enough posterior samples, try increasing the number of simulations.")
-        
-        post_dens = density(posterior)
-        abc = tibble(
-          distribution = "posterion (ABC)",
-          p = post_dens$x,
-          density = post_dens$y
-        )
-        
         d = bind_rows(
           d,
-          abc
+          abc_df()
         )
       }
       
