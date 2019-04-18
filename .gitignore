@@ -3,3 +3,5 @@
 .RData
 .Ruserdata
 worked/
+derby.log
+logs
